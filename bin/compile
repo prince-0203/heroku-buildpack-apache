@@ -21,30 +21,68 @@ shopt -s dotglob
 
 cd $BUILD_DIR
 
+echo "-----> Downloading APR version $APR_VERSION"
 APR_URL="http://mirror.cogentco.com/pub/apache/apr/apr-$APR_VERSION.tar.gz"
-echo "-----> Downloading Apache Portable Runtime version $APR_VERSION"
-curl --location --silent --max-time 60 --location "$APR_URL" | tar xz
+curl --location --max-time 60 --location "$APR_URL" | tar xz
 
-echo "-----> Building Apache Portable Runtime version $APR_VERSION"
-cd apr-1.5.1
+echo "-----> Building APR version $APR_VERSION"
+cd apr-$APR_VERSION
 ./configure --prefix=/app/apr
 make
 make test
 make install
 
-# TODO: Download, Build and Install APR-util
+echo "-----> Downloading APR-util version $APR_VERSION"
+APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_VERSION.tar.gz"
+curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz
 
-APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
+echo "-----> Building APR-util version $APR_VERSION"
+cd apr-util-$APR_VERSION
+./configure --prefix=/app/apr-util --with-apr=/app/apr
+make
+make test
+make install
+
 echo "-----> Downloading Apache version $APACHE_VERSION"
-curl --location --silent --max-time 60 --location "$APACHE_URL" | tar xz
+APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
+curl --location --max-time 60 --location "$APACHE_URL" | tar xz
 
-# TODO: Build and Install Apache
+echo "-----> Building Apache version $APACHE_VERSION"
+cd httpd-$APACHE_VERSION
+./configure --prefix=/app/apache --with-apr=/opt/apr/apr-$APR_VERSION --with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
+make
+make install
 
-PHP_URL="https://php.net/get/php-$PHP_VERSION.tar.gz/from/this/mirror"
 echo "-----> Downloading PHP version $PHP_VERSION"
-curl --location --silent --max-time 60 --location "$PHP_URL" | tar xz
+PHP_URL="https://php.net/get/php-$PHP_VERSION.tar.gz/from/this/mirror"
+curl --location --max-time 60 --location "$PHP_URL" | tar xz
 
-# TODO: Build and Install PHP
+echo "-----> Building PHP version $PHP_VERSION"
+cd php-$PHP_VERSION
+# TODO: configureのオプションを確認
+./configure \
+--prefix=/app/php \
+--enable-mbstring \
+--enable-mbregex \
+--with-gd \
+--with-freetype-dir=/usr/lib \
+--with-jpeg-dir=/usr/lib \
+--with-png-dir=/usr/lib \
+--with-zlib-dir=/usr/lib \
+--enable-gd-native-ttf \
+--enable-gd-jis-conv \
+--with-xsl \
+--enable-dom \
+--with-xsl=/usr/libz \
+--with-mcrypt \
+--with-gettext \
+--enable-bcmath \
+--enable-sockets \
+--with-openssl \
+--with-curl
+make
+make test
+make install
 
 # update config files
 cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
