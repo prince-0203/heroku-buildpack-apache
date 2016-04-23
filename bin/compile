@@ -56,8 +56,8 @@ cd httpd-$APACHE_VERSION
 ./configure \
   --prefix=/app/apache \
   --sysconfdir=/app/conf \
-  --with-apr=/opt/apr/apr-$APR_VERSION \
-  --with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
+  --with-apr=/app/apr \
+  --with-apr-util=/app/apr-util
 make
 
 echo "-----> Installing Apache version $APR_VERSION"
