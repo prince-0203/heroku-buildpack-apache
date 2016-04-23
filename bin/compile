@@ -39,8 +39,8 @@ curl --location --fail --max-time 60 "$APR_UTIL_URL" | tar xz
 
 echo "-----> Building APR-util version $APR_UTIL_VERSION"
 cd apr-util-$APR_UTIL_VERSION
-./configure /
-  --prefix=/app/apr-util /
+./configure \
+  --prefix=/app/apr-util \
   --with-apr=/app/apr
 make
 
