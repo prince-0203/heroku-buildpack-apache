@@ -19,8 +19,8 @@ shopt -s dotglob
 
 cd $BUILD_DIR
 
-echo "-----> Downloading APR version $APR_VERSION"
 APR_URL="http://mirror.cogentco.com/pub/apache/apr/apr-$APR_VERSION.tar.gz"
+echo "-----> Downloading APR version $APR_VERSION from $APR_URL"
 curl --location --max-time 60 --location "$APR_URL" | tar xz
 
 echo "-----> Building APR version $APR_VERSION"
@@ -32,8 +32,8 @@ make
 echo "-----> Installing APR version $APR_VERSION"
 make install
 
-echo "-----> Downloading APR-util version $APR_VERSION"
 APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_VERSION.tar.gz"
+echo "-----> Downloading APR-util version $APR_VERSION from $APR_UTIL_URL"
 curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz
 
 echo "-----> Building APR-util version $APR_VERSION"
@@ -46,8 +46,8 @@ make
 echo "-----> Installing APR-util version $APR_VERSION"
 make install
 
-echo "-----> Downloading Apache version $APACHE_VERSION"
 APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
+echo "-----> Downloading Apache version $APACHE_VERSION from $APACHE_URL"
 curl --location --max-time 60 --location "$APACHE_URL" | tar xz
 
 echo "-----> Building Apache version $APACHE_VERSION"
@@ -68,8 +68,8 @@ echo "-----> Test launching Apache version $APACHE_VERSION"
 echo "-----> Stopping Apache version $APACHE_VERSION"
 /app/apache/bin/apachectl stop
 
-echo "-----> Downloading PHP version $PHP_VERSION"
 PHP_URL="https://php.net/get/php-$PHP_VERSION.tar.gz/from/this/mirror"
+echo "-----> Downloading PHP version $PHP_VERSION from $PHP_URL"
 curl --location --max-time 60 --location "$PHP_URL" | tar xz
 
 echo "-----> Building PHP version $PHP_VERSION"
