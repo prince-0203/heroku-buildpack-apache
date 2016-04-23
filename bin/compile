@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # bin/compile <build-dir> <cache-dir>
 
 # fail fast
@@ -14,7 +15,6 @@ PHP_PATH="php"
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
 CACHE_DIR=$2
-LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 # include .files when moving things around
 shopt -s dotglob
@@ -23,45 +23,57 @@ cd $BUILD_DIR
 
 echo "-----> Downloading APR version $APR_VERSION"
 APR_URL="http://mirror.cogentco.com/pub/apache/apr/apr-$APR_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APR_URL" | tar xz
+curl --location --max-time 60 --location "$APR_URL" | tar xz || echo "-----> Failed to download APR!" ; exit 1
 
 echo "-----> Building APR version $APR_VERSION"
 cd apr-$APR_VERSION
 ./configure --prefix=/app/apr
-make
-make test
-make install
+make || echo "-----> Failed to build APR!" ; exit 1
+
+echo "-----> Installing APR version $APR_VERSION"
+make install || echo "-----> Failed to install APR!" ; exit 1
 
 echo "-----> Downloading APR-util version $APR_VERSION"
 APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz
+curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz || echo "-----> Failed to download APR-util!" ; exit 1
 
 echo "-----> Building APR-util version $APR_VERSION"
 cd apr-util-$APR_VERSION
 ./configure --prefix=/app/apr-util --with-apr=/app/apr
-make
-make test
-make install
+make  || echo "-----> Failed to build APR-util!" ; exit 1
+
+echo "-----> Installing APR-util version $APR_VERSION"
+make install || echo "-----> Failed to install APR-util!" ; exit 1
 
 echo "-----> Downloading Apache version $APACHE_VERSION"
 APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APACHE_URL" | tar xz
+curl --location --max-time 60 --location "$APACHE_URL" | tar xz || echo "-----> Failed to download Apache!" ; exit 1
 
 echo "-----> Building Apache version $APACHE_VERSION"
 cd httpd-$APACHE_VERSION
-./configure --prefix=/app/apache --with-apr=/opt/apr/apr-$APR_VERSION --with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
-make
-make install
+./configure \
+--prefix=/app/apache \
+--sysconfdir=/app/conf\
+--with-apr=/opt/apr/apr-$APR_VERSION \
+--with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
+make || echo "-----> Failed to build Apache!" ; exit 1
+
+echo "-----> Installing Apache version $APR_VERSION"
+make install || echo "-----> Failed to install Apache!" ; exit 1
+
+echo "-----> Test launching Apache version $APACHE_VERSION"
+/app/apache/bin/apachectl start || echo "-----> Failed to launch apache!" ; exit 1
 
 echo "-----> Downloading PHP version $PHP_VERSION"
 PHP_URL="https://php.net/get/php-$PHP_VERSION.tar.gz/from/this/mirror"
-curl --location --max-time 60 --location "$PHP_URL" | tar xz
+curl --location --max-time 60 --location "$PHP_URL" | tar xz || echo "-----> Failed to download PHP!" ; exit 1
 
 echo "-----> Building PHP version $PHP_VERSION"
 cd php-$PHP_VERSION
 # TODO: configureのオプションを確認
 ./configure \
 --prefix=/app/php \
+--with-config-file-path=/app/conf/php.ini \
 --enable-mbstring \
 --enable-mbregex \
 --with-gd \
@@ -80,13 +92,10 @@ cd php-$PHP_VERSION
 --enable-sockets \
 --with-openssl \
 --with-curl
-make
-make test
-make install
+make || echo "-----> Failed to build PHP!" ; exit 1
 
-# update config files
-cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
-cp $LP_DIR/conf/php.ini php
+echo "-----> Installing PHP version $APR_VERSION"
+make install || echo "-----> Failed to install PHP!" ; exit 1
 
 # make php available on bin
 mkdir -p bin
