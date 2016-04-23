@@ -7,6 +7,7 @@ set -eu
 
 # config
 APR_VERSION="1.5.2"
+APR_UTIL_VERSION="1.5.4"
 APACHE_VERSION="2.4.10"
 PHP_VERSION="7.0.5"
 
@@ -32,18 +33,18 @@ make
 echo "-----> Installing APR version $APR_VERSION"
 make install
 
-APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_VERSION.tar.gz"
-echo "-----> Downloading APR-util version $APR_VERSION from $APR_UTIL_URL"
+APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_UTIL_VERSION.tar.gz"
+echo "-----> Downloading APR-util version $APR_UTIL_VERSION from $APR_UTIL_URL"
 curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz
 
-echo "-----> Building APR-util version $APR_VERSION"
-cd apr-util-$APR_VERSION
+echo "-----> Building APR-util version $APR_UTIL_VERSION"
+cd apr-util-$APR_UTIL_VERSION
 ./configure /
   --prefix=/app/apr-util /
   --with-apr=/app/apr
 make
 
-echo "-----> Installing APR-util version $APR_VERSION"
+echo "-----> Installing APR-util version $APR_UTIL_VERSION"
 make install
 
 APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
