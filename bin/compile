@@ -2,15 +2,13 @@
 
 # bin/compile <build-dir> <cache-dir>
 
-# fail fast
-set -e
+# exit on error and no using undefined vars
+set -eu
 
 # config
 APR_VERSION="1.5.2"
 APACHE_VERSION="2.4.10"
-APACHE_PATH="apache"
 PHP_VERSION="7.0.5"
-PHP_PATH="php"
 
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
@@ -23,79 +21,101 @@ cd $BUILD_DIR
 
 echo "-----> Downloading APR version $APR_VERSION"
 APR_URL="http://mirror.cogentco.com/pub/apache/apr/apr-$APR_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APR_URL" | tar xz || echo "-----> Failed to download APR!" ; exit 1
+curl --location --max-time 60 --location "$APR_URL" | tar xz
 
 echo "-----> Building APR version $APR_VERSION"
 cd apr-$APR_VERSION
-./configure --prefix=/app/apr
-make || echo "-----> Failed to build APR!" ; exit 1
+./configure \
+  --prefix=/app/apr
+make
 
 echo "-----> Installing APR version $APR_VERSION"
-make install || echo "-----> Failed to install APR!" ; exit 1
+make install
 
 echo "-----> Downloading APR-util version $APR_VERSION"
 APR_UTIL_URL="http://mirror.cogentco.com/pub/apache/apr/apr-util-$APR_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz || echo "-----> Failed to download APR-util!" ; exit 1
+curl --location --max-time 60 --location "$APR_UTIL_URL" | tar xz
 
 echo "-----> Building APR-util version $APR_VERSION"
 cd apr-util-$APR_VERSION
-./configure --prefix=/app/apr-util --with-apr=/app/apr
-make  || echo "-----> Failed to build APR-util!" ; exit 1
+./configure /
+  --prefix=/app/apr-util /
+  --with-apr=/app/apr
+make
 
 echo "-----> Installing APR-util version $APR_VERSION"
-make install || echo "-----> Failed to install APR-util!" ; exit 1
+make install
 
 echo "-----> Downloading Apache version $APACHE_VERSION"
 APACHE_URL="http://mirror.cogentco.com/pub/apache/httpd/httpd-$APACHE_VERSION.tar.gz"
-curl --location --max-time 60 --location "$APACHE_URL" | tar xz || echo "-----> Failed to download Apache!" ; exit 1
+curl --location --max-time 60 --location "$APACHE_URL" | tar xz
 
 echo "-----> Building Apache version $APACHE_VERSION"
 cd httpd-$APACHE_VERSION
 ./configure \
---prefix=/app/apache \
---sysconfdir=/app/conf\
---with-apr=/opt/apr/apr-$APR_VERSION \
---with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
-make || echo "-----> Failed to build Apache!" ; exit 1
+  --prefix=/app/apache \
+  --sysconfdir=/app/conf \
+  --with-apr=/opt/apr/apr-$APR_VERSION \
+  --with-apr-util=/opt/apr-util/apr-util-$APR_VERSION
+make
 
 echo "-----> Installing Apache version $APR_VERSION"
-make install || echo "-----> Failed to install Apache!" ; exit 1
+make install
 
 echo "-----> Test launching Apache version $APACHE_VERSION"
-/app/apache/bin/apachectl start || echo "-----> Failed to launch apache!" ; exit 1
+/app/apache/bin/apachectl start
+
+echo "-----> Stopping Apache version $APACHE_VERSION"
+/app/apache/bin/apachectl stop
 
 echo "-----> Downloading PHP version $PHP_VERSION"
 PHP_URL="https://php.net/get/php-$PHP_VERSION.tar.gz/from/this/mirror"
-curl --location --max-time 60 --location "$PHP_URL" | tar xz || echo "-----> Failed to download PHP!" ; exit 1
+curl --location --max-time 60 --location "$PHP_URL" | tar xz
 
 echo "-----> Building PHP version $PHP_VERSION"
 cd php-$PHP_VERSION
 # TODO: configureのオプションを確認
 ./configure \
---prefix=/app/php \
---with-config-file-path=/app/conf/php.ini \
---enable-mbstring \
---enable-mbregex \
---with-gd \
---with-freetype-dir=/usr/lib \
---with-jpeg-dir=/usr/lib \
---with-png-dir=/usr/lib \
---with-zlib-dir=/usr/lib \
---enable-gd-native-ttf \
---enable-gd-jis-conv \
---with-xsl \
---enable-dom \
---with-xsl=/usr/libz \
---with-mcrypt \
---with-gettext \
---enable-bcmath \
---enable-sockets \
---with-openssl \
---with-curl
-make || echo "-----> Failed to build PHP!" ; exit 1
+  --prefix=/app/php \
+  --with-config-file-path=/app/conf/php.ini \
+  --enable-mbstring \
+  --enable-mbregex \
+  --enable-zip \
+  --enable-bcmath \
+  --enable-pcntl \
+  --enable-ftp \
+  --enable-sockets \
+  --enable-exif \
+  --enable-calendar \
+  --enable-sysvmsg \
+  --enable-sysvsem \
+  --enable-sysvshm \
+  --enable-wddx \
+  --with-curl \
+  --with-mcrypt \
+  --with-iconv \
+  --with-gmp \
+  --with-pspell \
+  --with-gd \
+  --with-jpeg-dir=/usr/lib \ # libjpeg
+  --with-png-dir=/usr/lib \
+  --with-zlib-dir=/usr/lib \
+  --with-xpm-dir=/usr/lib \
+  --with-freetype-dir=/usr/lib \
+  --enable-gd-native-ttf \
+  --enable-gd-jis-conv \
+  --with-xsl=/usr/lib \
+  --with-mcrypt=/usr/lib \
+  --with-gettext=/usr/lib \
+  --with-openssl=/usr/lib \
+  --with-gettext=/usr/lib \
+  --with-zlib=/usr/lib \
+  --with-bz2=/usr/lib \
+  --with-recode=/usr/lib \
+make
 
 echo "-----> Installing PHP version $APR_VERSION"
-make install || echo "-----> Failed to install PHP!" ; exit 1
+make install
 
 # make php available on bin
 mkdir -p bin
@@ -110,9 +130,8 @@ touch /app/apache/logs/access_log
 tail -F /app/apache/logs/error_log &
 tail -F /app/apache/logs/access_log &
 export LD_LIBRARY_PATH=/app/php/ext
-export PHP_INI_SCAN_DIR=/app
 echo "Launching apache"
-exec /app/apache/bin/httpd -DNO_DETACH
+exec /app/apache/bin/apachectl start -DNO_DETACH
 EOF
 
 chmod +x boot.sh
